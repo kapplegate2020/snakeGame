@@ -1,0 +1,502 @@
+<html>
+<head>
+	<title>Snake Game</title>
+	<style>
+		@font-face {
+			font-family: ComputerText;
+			src: url(additionalFiles/data-latin.ttf);
+		}
+		body{
+			font-family: ComputerText;
+			background-color:white;
+		}
+		.div{
+			width:20px;
+			height:20px;
+			background-color: #ffffff;
+			margin:0px;
+			display: inline-block;
+		}
+		#more{
+			position: absolute; 
+			left: 0; 
+			right: 0;
+			top: 0;
+			bottom: 0;
+		}
+		#all{
+			border: 1px #000000 solid;
+			position:relative;
+		}
+		#Gameover{
+			position: absolute; 
+			left: 0; 
+			right: 0;
+			top: 0;
+			bottom: 0;
+			margin: auto; 
+			width: 400px;
+			height: 300px;
+			background-color:#ffffff;
+			color:black;
+			font-size:72px;
+			text-align:center;
+		}
+		#score{
+			margin:auto;
+			width:1000px;
+			height: 40px;
+			text-align:right;
+		}
+		.scorego{
+			font-size:14px;
+			margin:8px;
+		}
+		.option{
+			font-size:50px;
+			margin:6 auto;
+			width:400px;
+			text-align: center;
+			height:60px;
+			cursor:pointer;
+		}
+		.option3{
+			font-size:50px;
+			margin:6 auto;
+			width:300px;
+			text-align: center;
+			height:60px;
+			cursor:context-menu;
+		}
+		.option:hover{
+			background-color:#dddddd;
+		}
+		.option2{
+			font-size:28px;
+			margin:6 auto;
+			width:200px;
+			text-align: center;
+			cursor:pointer;
+			padding:5px;
+		}
+		.option2:hover{
+			background-color:#dddddd;
+		}
+		#optionholder{
+			position:absolute;
+			top:50%;
+			margin-top:-168px;
+			width:1000px;
+		}
+		p{
+			margin-bottom:20px;
+		}
+	</style>
+</head>
+<body>
+	<div id="more">
+		<div id="score"><p id="scorep">Score: 5</p></div>
+		<div id="all">
+			<div id="optionholder">
+				<div class="option" onclick="easy()">easy</div>
+				<div class="option" onclick="medium()">medium</div>
+				<div class="option" onclick="hard()">hard</div>
+				<div class="option" onclick="insane()">insane</div>
+				<div class="option" onclick="hs()">your high scores</div>
+			</div>
+		</div>
+		
+	</div>
+	<script>
+		window.addEventListener("keydown", function(e) {
+			if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+				e.preventDefault();
+			}
+		}, false);
+		var currentheight = [1, 1, 1, 1, 1];
+		var currentwidth = [5, 4, 3, 2, 1];
+		var direction = ["r"];
+		var game = setInterval(mov, 100);
+		clearInterval(game);
+		document.onkeydown = checkKey;
+		var ranheight = 1;
+		var ranwidth = 1;
+		var length = 0;
+		var isgameover = false;
+		var intervalon = true;
+		var gottawait = false;
+		var atleast1 = false;
+		var w = window.innerWidth;
+		var width = Math.floor(w/20)-2;
+		var h = window.innerHeight;
+		var height = Math.floor(h/20)-4;
+		var toosmall = false;
+		document.getElementById("all").style.width = width*20;
+		document.getElementById("all").style.height = height*20;
+		document.getElementById("all").style.margin = (20+(h%20)+"px ")+(20+(w%20)/2+"px");
+		document.getElementById("all").style.marginTop = "0px";
+		document.getElementById("score").style.width = width*20 + "px";
+		if(h<391){
+			toosmall = true;
+			document.getElementById("all").innerHTML = "";
+			easy();
+		}else{
+			document.getElementById("optionholder").style.width = width*20 + "px";
+		}
+		
+		var difficulty = "";
+		function easy(){
+			game = setInterval(mov, 160);
+			makeDivs();
+			food();
+			difficulty = "easy";
+		}
+		function medium(){
+			game = setInterval(mov, 100);
+			makeDivs();
+			food();
+			difficulty = "medium";
+		}
+		function hard(){
+			game = setInterval(mov, 70);
+			makeDivs();
+			food();
+			difficulty = "hard";
+		}
+		function insane(){
+			game = setInterval(mov, 40);
+			makeDivs();
+			food();
+			difficulty = "insane";
+		}
+		function hs(){
+			var easy = "", medium = "", hard = "", insane = "";
+			if(localStorage.getItem("easy") !== null){
+				easy = "<div class='option3'>Easy: "+localStorage.getItem("easy")+"</div>";
+			}else{
+				easy = "<div class='option3'>Easy: None</div>";
+			}
+			if(localStorage.getItem("medium") !== null){
+				medium = "<div class='option3'>Medium: "+localStorage.getItem("medium")+"</div>";
+			}else{
+				medium = "<div class='option3'>Medium: None</div>";
+			}
+			if(localStorage.getItem("hard") !== null){
+				hard = "<div class='option3'>Hard: "+localStorage.getItem("hard")+"</div>";
+			}else{
+				hard = "<div class='option3'>Hard: None</div>";
+			}
+			if(localStorage.getItem("insane") !== null){
+				insane = "<div class='option3'>Insane: "+localStorage.getItem("insane")+"</div>";
+			}else{
+				insane = "<div class='option3'>Insane: None</div>";
+			}
+			goback = "<div class='option' onclick = 'gobacktostart()'>Go back</div>";
+			document.getElementById("optionholder").innerHTML = easy+medium+hard+insane+goback;
+		}
+		function gobacktostart(){
+			var all = "<div class='option' onclick='easy()'>easy</div>";
+			all += "<div class='option' onclick='medium()'>medium</div>";
+			all += "<div class='option' onclick='hard()'>hard</div>";
+			all += "<div class='option' onclick='insane()'>insane</div>";
+			all += "<div class='option' onclick='hs()'>your high scores</div>";
+			document.getElementById("optionholder").innerHTML = all;
+		}
+		function makeDivs(){
+			var divs="";
+			for(i=1;i<=height;i++){
+				for(j=1;j<=width;j++){
+					divs = divs + "<div id='"+i+"x"+j+"' class='div'></div>";
+				}
+			}
+			document.getElementById("all").innerHTML = divs;
+		}
+
+		function checkKey(e) {
+			e = e || window.event;
+			if (e.keyCode == '38') {
+				if((direction[direction.length-1] != "d")&&(direction[direction.length-1] != "u")){
+					direction.push("u");
+					if(!gottawait&&atleast1){
+						direction.shift();
+						gottawait = true;
+					}
+				}
+			}
+			else if (e.keyCode == '40') {
+				if((direction[direction.length-1] != "u")&&(direction[direction.length-1] != "d")){
+					direction.push("d");
+					if(!gottawait&&atleast1){
+						direction.shift();
+						gottawait = true;
+					}
+				}
+			}
+			else if (e.keyCode == '37') {
+				if((direction[direction.length-1] != "r")&&(direction[direction.length-1] != "l")){
+					direction.push("l");
+					if(!gottawait&&atleast1){
+						direction.shift();
+						gottawait = true;
+					}
+				}
+			}
+			else if (e.keyCode == '39') {
+				if((direction[direction.length-1] != "l")&&(direction[direction.length-1] != "r")){
+					direction.push("r");
+					if(!gottawait&&atleast1){
+						direction.shift();
+						gottawait = true;
+					}
+				}
+			}
+			if (e.keyCode == '32') {
+				if(intervalon){
+					clearInterval(game);
+					intervalon = false;
+				}else{
+					if(difficulty == "easy"){
+						game = setInterval(mov, 160);
+					}else if(difficulty == "medium"){
+						game = setInterval(mov, 100);
+					}else if(difficulty == "hard"){
+						game = setInterval(mov, 70);
+					}else if(difficulty == "insane"){
+						game = setInterval(mov, 40);
+					}
+					intervalon = true;
+				}
+			}
+		}
+		function mov(){
+			if(direction[0] == "r"){
+				mover();
+			}
+			else if(direction[0] == "l"){
+				movel();
+			}
+			else if(direction[0] == "u"){
+				moveu();
+			}
+			else if(direction[0] == "d"){
+				moved();
+			}
+		}
+		function mover(){
+			check();
+			if(currentwidth[0] == width){
+				gameover();
+			}else{
+				for(i=1;i<currentheight.length;i++){
+					currentheight[currentheight.length-i] = currentheight[currentheight.length-(i+1)];
+					currentwidth[currentwidth.length-i] = currentwidth[currentwidth.length-(i+1)];
+				}
+				currentwidth[0]++;
+			}
+			checkcolision();
+			update();
+			if(direction.length>1){
+				direction.shift();
+				atleast1 = false;
+			}else{
+				atleast1 = true;
+			}
+			gottawait = false;
+		}
+		function movel(){
+			check();
+			if(currentwidth[0] == 1){
+				gameover();
+			}else{
+				for(i=1;i<currentheight.length;i++){
+					currentheight[currentheight.length-i] = currentheight[currentheight.length-(i+1)];
+					currentwidth[currentwidth.length-i] = currentwidth[currentwidth.length-(i+1)];
+				}
+				currentwidth[0]--;
+			}
+			checkcolision();
+			update();
+			if(direction.length>1){
+				direction.shift();
+				atleast1 = false;
+			}else{
+				atleast1 = true;
+			}
+			gottawait = false;
+		}
+		function moved(){
+			check();
+			if(currentheight[0] == height){
+				gameover();
+			}else{
+				for(i=1;i<currentheight.length;i++){
+					currentheight[currentheight.length-i] = currentheight[currentheight.length-(i+1)];
+					currentwidth[currentwidth.length-i] = currentwidth[currentwidth.length-(i+1)];
+				}
+				currentheight[0]++;
+			}
+			checkcolision();
+			update();
+			if(direction.length>1){
+				direction.shift();
+				atleast1 = false;
+			}else{
+				atleast1 = true;
+			}
+			gottawait = false;
+		}
+		function moveu(){
+			check();
+			if(currentheight[0] == 1){
+				gameover();
+			}else{
+				for(i=1;i<currentheight.length;i++){
+					currentheight[currentheight.length-i] = currentheight[currentheight.length-(i+1)];
+					currentwidth[currentwidth.length-i] = currentwidth[currentwidth.length-(i+1)];
+				}
+				currentheight[0]--;
+			}
+			checkcolision();
+			update();
+			if(direction.length>1){
+				direction.shift();
+				atleast1 = false;
+			}else{
+				atleast1 = true;
+			}
+			gottawait = false;
+		}
+	
+		function update(){
+			var updatetrack = 0;
+			if(!isgameover){
+				divheight = 1;
+				while(divheight<=height){
+					divwidth = 1;
+					while(divwidth<=width){
+						document.getElementById(divheight+"x"+divwidth).style.backgroundColor = "#ffffff";
+						divwidth++
+					}
+					divheight++;
+				}
+				updatetrack = 0;
+				document.getElementById(ranheight+"x"+ranwidth).style.backgroundColor = "#00ff00";
+				while(updatetrack<currentheight.length){
+					document.getElementById(currentheight[updatetrack]+"x"+currentwidth[updatetrack]).style.backgroundColor = "#000000";
+					updatetrack++;
+				}
+			}
+		}
+
+		function food(){
+			ranheight = Math.floor(Math.random() * height)+1;
+			ranwidth = Math.floor(Math.random() * width)+1;
+			var foodtrack = 0;
+			var foodcol = false;
+			while(foodtrack<currentheight.length){
+				if(ranheight+"x"+ranwidth == currentheight[foodtrack]+"x"+currentwidth[foodtrack]){
+					foodcol = true;
+				}
+				foodtrack++;
+			}
+			while (foodcol) {
+				ranheightnum = Math.floor(Math.random() * 25);
+				lettertrack = 1;
+				ranwidth = Math.floor(Math.random() * width)+1;
+				foodcol = false;
+				foodtrack = 0;
+				while(foodtrack<currentheight.length){
+					if(ranheight+"x"+ranwidth == currentheight[foodtrack]+"x"+currentwidth[foodtrack]){
+						foodcol = true;
+					}
+					foodtrack++;
+				}
+			}
+			document.getElementById(ranheight+"x"+ranwidth).style.backgroundColor = "#00ff00";
+		}
+		
+		function check(){
+			if(currentheight[0]+"x"+currentwidth[0] == ranheight+"x"+ranwidth){
+				for(var i=1;i<6;i++){
+					currentheight[currentheight.length] = currentheight[0];
+					currentwidth[currentwidth.length] = currentwidth[0];
+				}
+				food();
+				document.getElementById("scorep").innerHTML = "Score: " + currentheight.length;
+			}
+			
+		}
+		
+		function checkcolision(){
+			var checktrack = 1;
+			while(checktrack<currentheight.length){
+				if(currentheight[0]+"x"+currentwidth[0] == currentheight[checktrack]+"x"+currentwidth[checktrack]){
+					gameover();
+				}
+				checktrack++;
+			}
+		}
+		
+		function gameover(){
+			isgameover = true;
+			clearInterval(game);
+			divheight = 1;
+			while(divheight<=height){
+				divwidth = 1;
+				while(divwidth<=width){
+					document.getElementById(divheight+"x"+divwidth).style.backgroundColor = "#000000";
+					divwidth++
+				}
+				divheight++;
+			}
+			var highscore = "";
+			if (typeof(Storage) !== "undefined") {
+				if(typeof(localStorage.getItem(difficulty)) !== "undefined"){
+					if(currentheight.length>localStorage.getItem(difficulty)){
+						localStorage.setItem(difficulty, currentheight.length);
+						highscore = "<p class='scorego'>Your High Score: " + currentheight.length + "</p>";
+					}else{
+						highscore = "<p class='scorego'>Your High Score: " + localStorage.getItem(difficulty) + "</p>";
+					}
+				}else{
+					localStorage.setItem(difficulty, currentheight.length);
+					highscore = "<p class='scorego'>Your High Score: " + currentheight.length + "</p>";
+				}
+			}
+			document.body.innerHTML +="<div id='GameOver'></div>";
+			document.getElementById("GameOver").innerHTML = "<p>Game Over</p><div class='option2' onclick='startover()'>Play Again?</div><p class='scorego'>Score: " + currentheight.length + "</p>"+highscore;
+			document.getElementById("scorep").innerHTML = "";
+		}
+		function startover(){
+			currentheight = [1, 1, 1, 1, 1];
+			currentwidth = [5, 4, 3, 2, 1];
+			direction = ["r"];
+			game = setInterval(mov, 100);
+			clearInterval(game);
+			document.onkeydown = checkKey;
+			ranheight = 1;
+			ranwidth = 1;
+			isgameover = false;
+			move = 1;
+			intervalon = true;
+			gottawait = false;
+			atleast1 = false;
+			document.getElementById("scorep").innerHTML = "Score: 5";
+				document.getElementById("GameOver").remove();
+			if(toosmall){
+				document.getElementById("all").innerHTML = "";
+				easy();
+			}else{
+				difficulty = "";
+				var all = "<div id='optionholder'><div class='option' onclick='easy()'>easy</div>";
+				all += "<div class='option' onclick='medium()'>medium</div>";
+				all += "<div class='option' onclick='hard()'>hard</div>";
+				all += "<div class='option' onclick='insane()'>insane</div>";
+				all += "<div class='option' onclick='hs()'>your high scores</div></div>";
+				document.getElementById("all").innerHTML = all;
+				document.getElementById("optionholder").style.width = width*20 + "px";
+			}
+		}
+	</script>
+</body>
+<html>
